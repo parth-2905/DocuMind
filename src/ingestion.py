@@ -9,13 +9,40 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # ── OCR helpers ──────────────────────────────────────────────────────────────
 
-def _ocr_page(page) -> str:
-    """Render a PDF page to image and extract text via tesseract."""
+OCR_THRESHOLD = 50
+OCR_CONF_THRESHOLD = 70.0
+MIN_TEXT_LENGTH = 50
+
+def _ocr_page(page) -> tuple:
+    """Render a PDF page and return (text, avg_confidence) with word-level filtering."""
     import pytesseract
     mat = fitz.Matrix(2, 2)
     pix = page.get_pixmap(matrix=mat)
     img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-    return pytesseract.image_to_string(img)
+
+    data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
+
+    valid_words = []
+    valid_confs = []
+    low_conf_count = 0
+
+    for i in range(len(data['text'])):
+        conf = int(data['conf'][i])
+        word = data['text'][i].strip()
+        if conf == -1 or not word:
+            continue
+        if conf >= OCR_CONF_THRESHOLD:
+            valid_words.append(word)
+            valid_confs.append(conf)
+        else:
+            low_conf_count += 1
+
+    text = " ".join(valid_words)
+    avg_conf = sum(valid_confs) / len(valid_confs) if valid_confs else 0.0
+    total_words = len(valid_words) + low_conf_count
+    drop_rate = low_conf_count / total_words if total_words > 0 else 0.0
+
+    return text, round(avg_conf, 1), round(drop_rate * 100, 1)
 
 def _ocr_image_bytes(blob: bytes) -> str:
     """Run OCR on raw image bytes (for embedded images in DOCX/PPTX)."""
@@ -25,21 +52,34 @@ def _ocr_image_bytes(blob: bytes) -> str:
 
 # ── Format handlers ──────────────────────────────────────────────────────────
 
-OCR_THRESHOLD = 50
-
 def _extract_pdf(path: str) -> Generator[dict, None, None]:
     doc = fitz.open(path)
     for page_num, page in enumerate(doc):
         text = page.get_text()
         is_image_page = len(text.strip()) < OCR_THRESHOLD
         if is_image_page:
-            text = _ocr_page(page)
-        if text.strip():
+            text, avg_conf, drop_rate = _ocr_page(page)
+            # drop chunk only if remaining text is too short after word filtering
+            if len(text.strip()) < MIN_TEXT_LENGTH:
+                continue
             yield {
                 "text": text,
                 "page": page_num + 1,
-                "ocr": is_image_page
+                "ocr": True,
+                "ocr_confidence": avg_conf,
+                "ocr_drop_rate": drop_rate,
+                "low_quality": avg_conf < OCR_CONF_THRESHOLD
             }
+        else:
+            if text.strip():
+                yield {
+                    "text": text,
+                    "page": page_num + 1,
+                    "ocr": False,
+                    "ocr_confidence": 100.0,
+                    "ocr_drop_rate": 0.0,
+                    "low_quality": False
+                }
 
 def _extract_docx(path: str) -> Generator[dict, None, None]:
     from docx import Document
@@ -53,13 +93,15 @@ def _extract_docx(path: str) -> Generator[dict, None, None]:
                 image_texts.append(ocr_text)
     full_text = text + ("\n" + "\n".join(image_texts) if image_texts else "")
     if full_text.strip():
-        yield {"text": full_text, "page": 1, "ocr": bool(image_texts)}
+        yield {"text": full_text, "page": 1, "ocr": bool(image_texts),
+               "ocr_confidence": 100.0, "ocr_drop_rate": 0.0, "low_quality": False}
 
 def _extract_txt(path: str) -> Generator[dict, None, None]:
     with open(path, "r", encoding="utf-8", errors="ignore") as f:
         text = f.read()
     if text.strip():
-        yield {"text": text, "page": 1, "ocr": False}
+        yield {"text": text, "page": 1, "ocr": False,
+               "ocr_confidence": 100.0, "ocr_drop_rate": 0.0, "low_quality": False}
 
 def _extract_pptx(path: str) -> Generator[dict, None, None]:
     from pptx import Presentation
@@ -74,7 +116,8 @@ def _extract_pptx(path: str) -> Generator[dict, None, None]:
                     texts.append(ocr_text)
         text = "\n".join(texts)
         if text.strip():
-            yield {"text": text, "page": slide_num + 1, "ocr": False}
+            yield {"text": text, "page": slide_num + 1, "ocr": False,
+                   "ocr_confidence": 100.0, "ocr_drop_rate": 0.0, "low_quality": False}
 
 def _extract_csv(path: str) -> Generator[dict, None, None]:
     with open(path, "r", encoding="utf-8", errors="ignore") as f:
@@ -82,7 +125,8 @@ def _extract_csv(path: str) -> Generator[dict, None, None]:
         rows = [", ".join(f"{k}: {v}" for k, v in row.items()) for row in reader]
     text = "\n".join(rows)
     if text.strip():
-        yield {"text": text, "page": 1, "ocr": False}
+        yield {"text": text, "page": 1, "ocr": False,
+               "ocr_confidence": 100.0, "ocr_drop_rate": 0.0, "low_quality": False}
 
 # ── Router ───────────────────────────────────────────────────────────────────
 
@@ -126,6 +170,9 @@ def chunk_document(file_path: str) -> list:
                 "text": chunk,
                 "page": page_data["page"],
                 "chunk_id": f"page{page_data['page']}_chunk{i}",
-                "ocr": page_data.get("ocr", False)
+                "ocr": page_data.get("ocr", False),
+                "ocr_confidence": page_data.get("ocr_confidence", 100.0),
+                "ocr_drop_rate": page_data.get("ocr_drop_rate", 0.0),
+                "low_quality": page_data.get("low_quality", False)
             })
     return chunks
