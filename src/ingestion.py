@@ -59,7 +59,6 @@ def _extract_pdf(path: str) -> Generator[dict, None, None]:
         is_image_page = len(text.strip()) < OCR_THRESHOLD
         if is_image_page:
             text, avg_conf, drop_rate = _ocr_page(page)
-            # drop chunk only if remaining text is too short after word filtering
             if len(text.strip()) < MIN_TEXT_LENGTH:
                 continue
             yield {
@@ -155,10 +154,10 @@ def clean_text(text: str) -> str:
     text = re.sub(r"[\x00-\x08\x0b-\x0c\x0e-\x1f]", "", text)
     return text.strip()
 
-def chunk_document(file_path: str) -> list:
+def chunk_document(file_path: str, chunk_size: int = 1000, chunk_overlap: int = 100) -> list:
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=50,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
         separators=["\n\n", "\n", ". ", " "]
     )
     chunks = []

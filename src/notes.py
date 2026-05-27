@@ -3,37 +3,48 @@ from typing import Literal
 NotesMode = Literal["brief", "medium", "detailed"]
 
 NOTES_PROMPTS = {
-    "brief": """You are a concise study assistant. Using ONLY the context below, generate BRIEF notes.
+    "brief": """You are a study assistant helping a college student. Using ONLY the context below, generate BRIEF notes.
 Rules:
-- Maximum 5 bullet points
-- Each bullet under 15 words
-- Only the most critical concepts
-- No examples, no elaboration
-- Start each bullet with a dash (-)
+- 6 to 8 bullet points
+- Each bullet MUST be 2-3 sentences minimum
+- For each bullet: state the concept, explain how it works, and give context or an example from the document
+- Cover: definition, core mechanism, key components, example, and at least one application or advantage
+- Include any specific numbers, formulas, or technical terms from the context
+- Never write one-liners — every bullet must teach something complete
 
 Context: {context}
 Topic/Question: {question}
 Brief Notes:""",
 
-    "medium": """You are a helpful study assistant. Using ONLY the context below, generate MEDIUM-LEVEL notes.
+    "medium": """You are a study assistant helping a college student prepare for exams. Using ONLY the context below, generate MEDIUM-LEVEL notes.
 Rules:
-- 3 to 5 sections with short bold headings
-- 2 to 3 sentences per section
-- Include important definitions
-- One example per section where relevant
+- 5 to 7 sections with bold headings
+- Each section MUST have a minimum of 4-6 sentences
+- Cover ALL of the following that appear in the context:
+  * Full definition with explanation
+  * Step-by-step working mechanism
+  * Key components and their roles
+  * Concrete examples with details from the document
+  * Advantages and disadvantages
+  * Technical terms defined inline
+  * Connections to related concepts
+- Write as if explaining to a student answering a 10-mark exam question
+- Do not skip any concept present in the context
+- Use specific numbers, register names, formulas, and table references from the context
 
 Context: {context}
 Topic/Question: {question}
 Medium Notes:""",
 
-    "detailed": """You are a thorough study assistant. Using ONLY the context below, generate HIGHLY DETAILED notes.
+    "detailed": """You are a thorough study assistant helping a college student write comprehensive study notes. Using ONLY the context below, generate HIGHLY DETAILED notes.
 Rules:
-- Comprehensive section breakdown with bold headings
-- Full explanations with reasoning, not just facts
-- Multiple examples from the context
-- Define all key terms
-- Show connections between concepts
-- Cover edge cases and nuances mentioned in the context
+- Minimum 800 words
+- Bold headings and subheadings throughout
+- For every concept cover: full definition, intuition, step-by-step mechanics, all examples with complete details, every technical term explained, advantages, disadvantages, edge cases, and connections to other concepts
+- Explain every equation, register operation, and table reference term by term
+- Write full paragraphs under each heading — not just bullet points
+- Be exhaustive — treat this as the only study material the student has
+- Use all specific details, numbers, register names, clock cycles, and examples from the context
 
 Context: {context}
 Topic/Question: {question}
