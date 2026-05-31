@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-multipart
+pymupdf
+python-docx
+python-pptx
+langchain-text-splitters
+pytesseract
+Pillow
+faiss-cpu
+sentence-transformers
+rank-bm25
+groq
