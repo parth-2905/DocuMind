@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 
 from app.session import session_manager
@@ -34,6 +34,10 @@ app.add_middleware(
 )
 
 app.mount("/figures", StaticFiles(directory="figures"), name="figures")
+
+# Serve React frontend static assets
+if os.path.exists("frontend/assets"):
+    app.mount("/assets", StaticFiles(directory="frontend/assets"), name="static-assets")
 
 reranker = Reranker()
 llm = get_llm()
@@ -137,3 +141,10 @@ def delete_session(session_id: str):
         raise HTTPException(status_code=404, detail="Session not found.")
     session_manager.delete(session_id)
     return {"message": "Session deleted."}
+
+# Serve React frontend — must be last
+@app.get("/{full_path:path}")
+def serve_frontend(full_path: str):
+    if os.path.exists("frontend/index.html"):
+        return FileResponse("frontend/index.html")
+    return JSONResponse({"detail": "Frontend not found"}, status_code=404)
