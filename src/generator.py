@@ -44,6 +44,7 @@ def generate_response(query, chunks, llm, notes_mode="medium"):
 ONLY answer using information explicitly present in the provided context.
 Write detailed, thorough notes that fully cover every concept mentioned in the context.
 The more content in the context, the more detailed your notes should be.
+Always cite the source page number using the format (p. X) at the end of each section or key point.
 If the question is not answerable from the context, respond with ONLY: 'I could not find this in the document.'
 Do NOT use any knowledge outside the provided context under any circumstances."""
             },
