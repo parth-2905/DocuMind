@@ -3,8 +3,9 @@ from typing import Literal
 NotesMode = Literal["brief", "medium", "detailed"]
 
 NOTES_PROMPTS = {
-    "brief": """You are a study assistant helping a college student. Using ONLY the context below, generate BRIEF notes.
-Rules:
+    "brief": """You are a study assistant. First check if the topic/question is covered in the context below.
+If the topic is NOT mentioned anywhere in the context, respond with ONLY: 'I could not find this in the document.'
+If it IS covered, generate BRIEF notes following these rules:
 - 6 to 8 bullet points
 - Each bullet MUST be 2-3 sentences minimum
 - For each bullet: state the concept, explain how it works, and give context or an example from the document
@@ -16,8 +17,9 @@ Context: {context}
 Topic/Question: {question}
 Brief Notes:""",
 
-    "medium": """You are a study assistant helping a college student prepare for exams. Using ONLY the context below, generate MEDIUM-LEVEL notes.
-Rules:
+    "medium": """You are a study assistant. First check if the topic/question is covered in the context below.
+If the topic is NOT mentioned anywhere in the context, respond with ONLY: 'I could not find this in the document.'
+If it IS covered, generate MEDIUM notes following these rules:
 - 5 to 7 sections with bold headings
 - Each section MUST have a minimum of 4-6 sentences
 - Cover ALL of the following that appear in the context:
@@ -36,8 +38,9 @@ Context: {context}
 Topic/Question: {question}
 Medium Notes:""",
 
-    "detailed": """You are a thorough study assistant helping a college student write comprehensive study notes. Using ONLY the context below, generate HIGHLY DETAILED notes.
-Rules:
+    "detailed": """You are a study assistant. First check if the topic/question is covered in the context below.
+If the topic is NOT mentioned anywhere in the context, respond with ONLY: 'I could not find this in the document.'
+If it IS covered, generate DETAILED notes following these rules:
 - Minimum 800 words
 - Bold headings and subheadings throughout
 - For every concept cover: full definition, intuition, step-by-step mechanics, all examples with complete details, every technical term explained, advantages, disadvantages, edge cases, and connections to other concepts
@@ -48,7 +51,32 @@ Rules:
 
 Context: {context}
 Topic/Question: {question}
-Detailed Notes:"""
+Detailed Notes:""",
+
+    "qa": """Answer the following question using ONLY the information in the context below.
+Be concise and direct. 5-6 sentences maximum.
+If the answer is not in the context, respond with ONLY: 'I could not find this in the document.'
+
+Context: {context}
+Question: {question}
+Answer:""",
+
+    "qa_brief": """Answer the following question using ONLY the information in the context below.
+Be very brief — 3-4 sentences maximum.
+If the answer is not in the context, respond with ONLY: 'I could not find this in the document.'
+
+Context: {context}
+Question: {question}
+Answer:""",
+
+    "qa_detailed": """Answer the following question using ONLY the information in the context below.
+Be thorough and detailed — cover all relevant aspects found in the context with examples.
+Cite page numbers using (p. X) format.
+If the answer is not in the context, respond with ONLY: 'I could not find this in the document.'
+
+Context: {context}
+Question: {question}
+Answer:""",
 }
 
 def get_prompt(mode: NotesMode, context: str, question: str) -> str:
