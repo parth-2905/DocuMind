@@ -32,8 +32,15 @@ def generate_response(query, chunks, llm, notes_mode="medium"):
     from src.notes import get_prompt
     prompt = get_prompt(notes_mode, context, query)
 
-    max_tokens = 1024 if notes_mode == "brief" else 2048 if notes_mode == "medium" else 3000
-
+    max_tokens_map = {
+    "brief": 1024,
+    "medium": 2048,
+    "detailed": 3000,
+    "qa": 1024,
+    "qa_brief": 512,
+    "qa_detailed": 2048,
+    }
+    max_tokens = max_tokens_map.get(notes_mode, 1024)
     if notes_mode in ["brief", "medium", "detailed"]:
         system_prompt = """You are a strict study assistant helping college students.
 ONLY answer using information explicitly present in the provided context.
