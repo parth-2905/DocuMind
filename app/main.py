@@ -109,7 +109,7 @@ async def query(req: QueryRequest):
     if not session.vector_store:
         raise HTTPException(status_code=422, detail="Document not indexed yet.")
 
-    top_k_map = {"brief": 5, "medium": 8, "detailed": 12, "qa":8}
+    top_k_map = {"brief": 5, "medium": 8, "detailed": 12, "qa": 8, "qa_brief": 5, "qa_detailed": 12}
     top_k = top_k_map.get(req.notes_mode, 8)
 
     async def process():
