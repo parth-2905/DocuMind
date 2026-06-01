@@ -28,6 +28,13 @@ def generate_response(query, chunks, llm, notes_mode="medium"):
             prefix += " [low OCR confidence — treat cautiously]"
         context_parts.append(f"{prefix}: {c['text']}")
     context = "\n\n".join(context_parts)
+    
+     mode_aliases = {
+        "qa":         "medium",
+        "qa_brief":   "brief",
+        "qa_detailed": "detailed",
+    }
+    resolved_mode = mode_aliases.get(notes_mode, notes_mode)
 
     from src.notes import get_prompt
     prompt = get_prompt(notes_mode, context, query)
@@ -36,9 +43,6 @@ def generate_response(query, chunks, llm, notes_mode="medium"):
     "brief": 1024,
     "medium": 2048,
     "detailed": 3000,
-    "qa": 1024,
-    "qa_brief": 512,
-    "qa_detailed": 2048,
     }
     max_tokens = max_tokens_map.get(notes_mode, 1024)
     if notes_mode in ["brief", "medium", "detailed"]:
