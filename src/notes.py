@@ -52,31 +52,6 @@ If it IS covered, generate DETAILED notes following these rules:
 Context: {context}
 Topic/Question: {question}
 Detailed Notes:""",
-
-    "qa": """Answer the following question using ONLY the information in the context below.
-Be concise and direct. 5-6 sentences maximum.
-If the answer is not in the context, respond with ONLY: 'I could not find this in the document.'
-
-Context: {context}
-Question: {question}
-Answer:""",
-
-    "qa_brief": """Answer the following question using ONLY the information in the context below.
-Be very brief — 3-4 sentences maximum.
-If the answer is not in the context, respond with ONLY: 'I could not find this in the document.'
-
-Context: {context}
-Question: {question}
-Answer:""",
-
-    "qa_detailed": """Answer the following question using ONLY the information in the context below.
-Be thorough and detailed — cover all relevant aspects found in the context with examples.
-Cite page numbers using (p. X) format.
-If the answer is not in the context, respond with ONLY: 'I could not find this in the document.'
-
-Context: {context}
-Question: {question}
-Answer:""",
 }
 
 def get_prompt(mode: NotesMode, context: str, question: str) -> str:
@@ -85,7 +60,7 @@ def get_prompt(mode: NotesMode, context: str, question: str) -> str:
 
 def get_mode_label(mode: NotesMode) -> str:
     return {
-        "brief": "Brief - key points only",
-        "medium": "Medium - balanced summary",
-        "detailed": "Detailed - comprehensive notes"
+        "brief":    "Brief - key points only",
+        "medium":   "Medium - balanced summary",
+        "detailed": "Detailed - comprehensive notes",
     }.get(mode, mode)
