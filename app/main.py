@@ -121,15 +121,15 @@ async def query(req: QueryRequest):
 
         return generate_response(req.query, top_chunks, llm, notes_mode=req.notes_mode, top_reranker_score=top_score)
     
-        result = await request_queue.run(process)
+    result = await request_queue.run(process)
     
-        return {
-            "answer": result["answer"],
-            "sources": result["sources"],
-            "mode": result["mode"],
-            "source_type": result["source_type"],
-            "queue_position": request_queue.waiting
-        }
+    return {
+        "answer": result["answer"],
+        "sources": result["sources"],
+        "mode": result["mode"],
+        "source_type": result["source_type"],
+        "queue_position": request_queue.waiting
+    }
 
 @app.get("/session-figures/{session_id}")
 def get_figures(session_id: str):
