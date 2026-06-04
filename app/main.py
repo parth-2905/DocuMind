@@ -113,21 +113,21 @@ async def query(req: QueryRequest):
     top_k = top_k_map.get(req.notes_mode, 8)
 
     async def process():
-    vector_results = session.vector_store.search(req.query, k=10)
-    bm25_results = session.bm25.search(req.query, k=10)
-    fused = reciprocal_rank_fusion(vector_results, bm25_results)
-    top_chunks, top_score = reranker.rerank_with_scores(req.query, fused, top_k=top_k)
-    return generate_response(req.query, top_chunks, llm, notes_mode=req.notes_mode, top_reranker_score=top_score)
-
-    result = await request_queue.run(process)
-
-    return {
-        "answer": result["answer"],
-        "sources": result["sources"],
-        "mode": result["mode"],
-        "source_type": result["source_type"],
-        "queue_position": request_queue.waiting
-    }
+        vector_results = session.vector_store.search(req.query, k=10)
+        bm25_results = session.bm25.search(req.query, k=10)
+        fused = reciprocal_rank_fusion(vector_results, bm25_results)
+        top_chunks, top_score = reranker.rerank_with_scores(req.query, fused, top_k=top_k)
+        return generate_response(req.query, top_chunks, llm, notes_mode=req.notes_mode, top_reranker_score=top_score)
+    
+        result = await request_queue.run(process)
+    
+        return {
+            "answer": result["answer"],
+            "sources": result["sources"],
+            "mode": result["mode"],
+            "source_type": result["source_type"],
+            "queue_position": request_queue.waiting
+        }
 
 @app.get("/session-figures/{session_id}")
 def get_figures(session_id: str):
