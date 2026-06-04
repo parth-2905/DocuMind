@@ -117,6 +117,8 @@ async def query(req: QueryRequest):
         bm25_results = session.bm25.search(req.query, k=10)
         fused = reciprocal_rank_fusion(vector_results, bm25_results)
         top_chunks, top_score = reranker.rerank_with_scores(req.query, fused, top_k=top_k)
+        print(f"DEBUG top_reranker_score: {top_score}")  # add this
+
         return generate_response(req.query, top_chunks, llm, notes_mode=req.notes_mode, top_reranker_score=top_score)
     
         result = await request_queue.run(process)
