@@ -125,6 +125,7 @@ async def query(req: QueryRequest):
         "answer": result["answer"],
         "sources": result["sources"],
         "mode": result["mode"],
+        "source_type": result["source_type"],
         "queue_position": request_queue.waiting
     }
 
