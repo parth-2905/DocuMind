@@ -3,7 +3,7 @@ from groq import Groq
 
 # ── Thresholds ────────────────────────────────────────────────────────────────
 FULL_CONTEXT_THRESHOLD = 3.0   # above this → answer purely from document
-PARTIAL_THRESHOLD      = 2.0   # between 0 and 2 → hybrid answer
+PARTIAL_THRESHOLD      = -1.0   # between 0 and 2 → hybrid answer
                                 # below 0 → full fallback
 
 def get_llm():
