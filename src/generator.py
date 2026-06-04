@@ -3,8 +3,8 @@ from groq import Groq
 
 # ── Thresholds ────────────────────────────────────────────────────────────────
 FULL_CONTEXT_THRESHOLD = 3.0   # above this → answer purely from document
-PARTIAL_THRESHOLD      = -1.0   # between 0 and 2 → hybrid answer
-                                # below 0 → full fallback
+PARTIAL_THRESHOLD      = -1.0  # between -1 and 3 → hybrid answer
+                                # below -1 → full fallback
 
 def get_llm():
     return Groq(api_key=os.environ["GROQ_API_KEY"])
@@ -54,9 +54,6 @@ def generate_response(query, chunks, llm, notes_mode="medium", top_reranker_scor
     }
     resolved_mode = mode_aliases.get(notes_mode, notes_mode)
 
-    from src.notes import get_prompt
-    prompt = get_prompt(resolved_mode, context, query)
-
     max_tokens_map = {
         "brief": 1024,
         "medium": 2048,
@@ -64,8 +61,10 @@ def generate_response(query, chunks, llm, notes_mode="medium", top_reranker_scor
     }
     max_tokens = max_tokens_map.get(resolved_mode, 1024)
 
-    # ── System prompt based on source type ───────────────────────────────────
+    # ── Build prompt based on source type ────────────────────────────────────
     if source_type == "document":
+        from src.notes import get_prompt
+        prompt = get_prompt(resolved_mode, context, query)
         system_prompt = """You are a strict study assistant helping college students.
 ONLY answer using information explicitly present in the provided context.
 Write detailed, thorough notes that fully cover every concept mentioned in the context.
@@ -74,6 +73,7 @@ If the topic is not covered in the context at all, respond with ONLY: 'I could n
 Do NOT use any knowledge outside the provided context under any circumstances."""
 
     elif source_type == "partial":
+        prompt = f"Context from document:\n\n{context}\n\nQuestion: {query}\n\nAnswer:"
         system_prompt = """You are a helpful study assistant. The document contains limited information on this topic.
 Structure your response in two clearly labeled parts:
 
@@ -86,6 +86,7 @@ Supplement with your own knowledge to give a complete answer.
 Clearly distinguish what comes from the document vs general knowledge."""
 
     else:  # fallback
+        prompt = f"Question: {query}\n\nAnswer:"
         system_prompt = """You are a helpful study assistant. The uploaded document does not contain relevant information for this query.
 Answer using your general knowledge. Be clear and concise.
 Start your response with exactly: '⚠️ Not found in document — answering from general knowledge:\n\n'
@@ -108,5 +109,5 @@ Then provide your answer."""
         "answer": answer,
         "sources": sources,
         "mode": resolved_mode,
-        "source_type": source_type  # "document" | "partial" | "fallback"
+        "source_type": source_type
     }
